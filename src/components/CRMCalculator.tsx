@@ -8,6 +8,7 @@ const CRMCalculator = () => {
   const [salespeople, setSalespeople] = useState<number>(5);
   const [callsPerWeek, setCallsPerWeek] = useState<number>(20);
   const [callDuration, setCallDuration] = useState<number>(30);
+  const [crmTime, setCrmTime] = useState<number>(15);
   const [hourlyCost, setHourlyCost] = useState<number>(100);
 
   const handleNumberInput = (value: string, setter: (val: number) => void) => {
@@ -22,48 +23,48 @@ const CRMCalculator = () => {
   };
 
   // Assumptions for calculations
-  const TIME_PER_CALL = 15; // minutes per call (notatka + draft)
   const AUTOMATION_EFFICIENCY = 0.85; // 85% time saved
 
   const [results, setResults] = useState({
-    totalManualTime: 0,
-    totalTimeSaved: 0,
-    moneySaved: 0,
-    weeklyHoursSaved: 0,
-    monthlyHoursSaved: 0,
     monthlyCalls: 0,
+    monthlyManualTime: 0,
+    monthlyTimeSaved: 0,
+    weeklyTimeSaved: 0,
+    moneySavedWeekly: 0,
+    moneySavedMonthly: 0,
+    moneySavedYearly: 0,
   });
 
   useEffect(() => {
-    // Total calls per week
-    const totalWeeklyCalls = salespeople * callsPerWeek;
+    // Liczba rozmów miesięcznie = ilość handlowców * ilość rozmów tygodniowo * 4
+    const monthlyCalls = salespeople * callsPerWeek * 4;
     
-    // Monthly calls
-    const monthlyCalls = totalWeeklyCalls * 4.33; // average weeks per month
+    // Czas wprowadzenia rozmów miesięcznie = Liczba rozmów miesięcznie * czas na CRM
+    const monthlyManualTimeMinutes = monthlyCalls * crmTime;
     
-    // Time spent manually (minutes per week) - 15 min per call
-    const weeklyManualTime = totalWeeklyCalls * TIME_PER_CALL;
+    // Czas zaoszczędzony miesięcznie (85% czasu wprowadzenia)
+    const monthlyTimeSavedMinutes = monthlyManualTimeMinutes * AUTOMATION_EFFICIENCY;
+    const monthlyTimeSavedHours = monthlyTimeSavedMinutes / 60;
     
-    // Total time that could be saved with automation (minutes per week)
-    const timeSavedMinutes = weeklyManualTime * AUTOMATION_EFFICIENCY;
-    const timeSavedHours = timeSavedMinutes / 60;
+    // Czas zaoszczędzony tygodniowo
+    const weeklyTimeSavedMinutes = monthlyTimeSavedMinutes / 4;
+    const weeklyTimeSavedHours = weeklyTimeSavedMinutes / 60;
     
-    // Money saved per week
-    const weeklySavings = timeSavedHours * hourlyCost * salespeople;
-    
-    // Monthly calculations
-    const monthlyHoursSaved = timeSavedHours * 4.33; // average weeks per month
-    const monthlySavings = weeklySavings * 4.33;
+    // Oszczędności finansowe
+    const monthlySavings = monthlyTimeSavedHours * hourlyCost * salespeople;
+    const weeklySavings = monthlySavings / 4;
+    const yearlySavings = monthlySavings * 12;
 
     setResults({
-      totalManualTime: weeklyManualTime,
-      totalTimeSaved: timeSavedMinutes,
-      moneySaved: weeklySavings,
-      weeklyHoursSaved: timeSavedHours,
-      monthlyHoursSaved: monthlyHoursSaved,
-      monthlyCalls: Math.round(monthlyCalls),
+      monthlyCalls: monthlyCalls,
+      monthlyManualTime: monthlyManualTimeMinutes,
+      monthlyTimeSaved: monthlyTimeSavedMinutes,
+      weeklyTimeSaved: weeklyTimeSavedMinutes,
+      moneySavedWeekly: weeklySavings,
+      moneySavedMonthly: monthlySavings,
+      moneySavedYearly: yearlySavings,
     });
-  }, [salespeople, callsPerWeek, callDuration, hourlyCost]);
+  }, [salespeople, callsPerWeek, crmTime, hourlyCost]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pl-PL', {
@@ -159,6 +160,20 @@ const CRMCalculator = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="crmTime" className="text-base font-semibold">
+                  Czas na uzupełnienie CRM (notatka, pola, zadania) i draft (minuty)
+                </Label>
+                <Input
+                  id="crmTime"
+                  type="number"
+                  min="1"
+                  value={crmTime === 0 ? '' : crmTime}
+                  onChange={(e) => handleNumberInput(e.target.value, setCrmTime)}
+                  className="h-12 text-lg border-2 focus:border-primary transition-smooth [&::-webkit-inner-spin-button]:h-10 [&::-webkit-inner-spin-button]:w-6"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="cost" className="text-base font-semibold">
                   Koszt godziny handlowca (PLN)
                 </Label>
@@ -208,10 +223,10 @@ const CRMCalculator = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-sm text-muted-foreground mb-1">
-                      Czas wprowadzania do CRM i draft
+                      Czas wprowadzania do CRM i draft (miesięcznie)
                     </h3>
                     <p className="text-2xl font-bold text-foreground">
-                      {formatTime(results.totalManualTime)} / tydzień
+                      {formatTime(results.monthlyManualTime)}
                     </p>
                   </div>
                 </div>
@@ -222,16 +237,16 @@ const CRMCalculator = () => {
                 <div className="space-y-4">
                   <div>
                     <h3 className="font-semibold text-lg text-primary-foreground mb-3">
-                      Czas
+                      Oszczędność czasu
                     </h3>
-                    <p className="text-3xl font-bold text-primary-foreground">
-                      {formatTime(results.totalTimeSaved)} / tydzień
-                    </p>
-                    <p className="text-2xl font-bold text-primary-foreground mt-2">
-                      {results.weeklyHoursSaved.toFixed(1)} godz tygodniowo
+                    <p className="text-2xl font-bold text-primary-foreground">
+                      {formatTime(results.weeklyTimeSaved)} / tydzień
                     </p>
                     <p className="text-2xl font-bold text-primary-foreground mt-1">
-                      {results.monthlyHoursSaved.toFixed(0)} godz miesięcznie
+                      {formatTime(results.monthlyTimeSaved)} / miesiąc
+                    </p>
+                    <p className="text-sm text-primary-foreground/80 mt-2">
+                      ({(results.monthlyTimeSaved / 60).toFixed(0)} godz miesięcznie)
                     </p>
                   </div>
 
@@ -242,16 +257,16 @@ const CRMCalculator = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg text-primary-foreground mb-3">
-                          Pieniądze
+                          Oszczędność finansowa
                         </h3>
                         <p className="text-2xl font-bold text-primary-foreground">
-                          {formatCurrency(results.moneySaved)} / tydzień
+                          {formatCurrency(results.moneySavedWeekly)} / tydzień
                         </p>
                         <p className="text-2xl font-bold text-primary-foreground mt-1">
-                          {formatCurrency(results.moneySaved * 4.33)} / miesiąc
+                          {formatCurrency(results.moneySavedMonthly)} / miesiąc
                         </p>
                         <p className="text-2xl font-bold text-primary-foreground mt-1">
-                          {formatCurrency(results.moneySaved * 52)} / rok
+                          {formatCurrency(results.moneySavedYearly)} / rok
                         </p>
                       </div>
                     </div>
