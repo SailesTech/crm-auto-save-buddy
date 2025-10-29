@@ -10,6 +10,17 @@ const CRMCalculator = () => {
   const [callDuration, setCallDuration] = useState<number>(30);
   const [hourlyCost, setHourlyCost] = useState<number>(100);
 
+  const handleNumberInput = (value: string, setter: (val: number) => void) => {
+    if (value === '' || value === '0') {
+      setter(0);
+    } else {
+      const num = parseInt(value, 10);
+      if (!isNaN(num)) {
+        setter(num);
+      }
+    }
+  };
+
   // Assumptions for calculations
   const CRM_ENTRY_TIME = 10; // minutes per call
   const ANALYSIS_TIME = 15; // minutes per call
@@ -74,15 +85,23 @@ const CRMCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-subtle py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background waves */}
+      <div className="absolute inset-0 pointer-events-none opacity-30">
+        <img 
+          src="/waves-background.svg" 
+          alt="" 
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div className="max-w-6xl mx-auto relative z-10">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-accent rounded-2xl mb-6">
             <Calculator className="w-8 h-8 text-accent-foreground" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Kalkulator Oszczędności CRM
+            Kalkulator Oszczędności CallOS
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Oblicz, ile czasu i pieniędzy zaoszczędzisz dzięki automatycznemu uzupełnianiu CRM na podstawie rozmów
@@ -107,9 +126,9 @@ const CRMCalculator = () => {
                   id="salespeople"
                   type="number"
                   min="1"
-                  value={salespeople}
-                  onChange={(e) => setSalespeople(Number(e.target.value))}
-                  className="h-12 text-lg border-2 focus:border-primary transition-smooth"
+                  value={salespeople === 0 ? '' : salespeople}
+                  onChange={(e) => handleNumberInput(e.target.value, setSalespeople)}
+                  className="h-12 text-lg border-2 focus:border-primary transition-smooth [&::-webkit-inner-spin-button]:h-10 [&::-webkit-inner-spin-button]:w-6"
                 />
               </div>
 
@@ -121,9 +140,9 @@ const CRMCalculator = () => {
                   id="calls"
                   type="number"
                   min="1"
-                  value={callsPerWeek}
-                  onChange={(e) => setCallsPerWeek(Number(e.target.value))}
-                  className="h-12 text-lg border-2 focus:border-primary transition-smooth"
+                  value={callsPerWeek === 0 ? '' : callsPerWeek}
+                  onChange={(e) => handleNumberInput(e.target.value, setCallsPerWeek)}
+                  className="h-12 text-lg border-2 focus:border-primary transition-smooth [&::-webkit-inner-spin-button]:h-10 [&::-webkit-inner-spin-button]:w-6"
                 />
               </div>
 
@@ -135,9 +154,9 @@ const CRMCalculator = () => {
                   id="duration"
                   type="number"
                   min="1"
-                  value={callDuration}
-                  onChange={(e) => setCallDuration(Number(e.target.value))}
-                  className="h-12 text-lg border-2 focus:border-primary transition-smooth"
+                  value={callDuration === 0 ? '' : callDuration}
+                  onChange={(e) => handleNumberInput(e.target.value, setCallDuration)}
+                  className="h-12 text-lg border-2 focus:border-primary transition-smooth [&::-webkit-inner-spin-button]:h-10 [&::-webkit-inner-spin-button]:w-6"
                 />
               </div>
 
@@ -149,9 +168,9 @@ const CRMCalculator = () => {
                   id="cost"
                   type="number"
                   min="1"
-                  value={hourlyCost}
-                  onChange={(e) => setHourlyCost(Number(e.target.value))}
-                  className="h-12 text-lg border-2 focus:border-primary transition-smooth"
+                  value={hourlyCost === 0 ? '' : hourlyCost}
+                  onChange={(e) => handleNumberInput(e.target.value, setHourlyCost)}
+                  className="h-12 text-lg border-2 focus:border-primary transition-smooth [&::-webkit-inner-spin-button]:h-10 [&::-webkit-inner-spin-button]:w-6"
                 />
               </div>
             </CardContent>
@@ -226,13 +245,13 @@ const CRMCalculator = () => {
                         <h3 className="font-semibold text-sm text-primary-foreground/80 mb-2">
                           Oszczędność finansowa
                         </h3>
-                        <p className="text-3xl font-bold text-primary-foreground">
+                        <p className="text-2xl font-bold text-primary-foreground">
                           {formatCurrency(results.moneySaved)} / tydzień
                         </p>
-                        <p className="text-lg text-primary-foreground/90 mt-1">
+                        <p className="text-2xl font-bold text-primary-foreground mt-1">
                           {formatCurrency(results.moneySaved * 4.33)} / miesiąc
                         </p>
-                        <p className="text-lg text-primary-foreground/90 mt-1">
+                        <p className="text-2xl font-bold text-primary-foreground mt-1">
                           {formatCurrency(results.moneySaved * 52)} / rok
                         </p>
                       </div>
